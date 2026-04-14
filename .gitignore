@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Production Build Output
+dist/
+frontend/dist/
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.development
+.env.example
+
+# Logs & Debug Data
+*.log
+nakama_logs.txt
+nakama-logs-cmd.txt
+nakama-logs-cmd2.txt
+nakama-logs-full.txt
+nakama-server/nakama_logs.txt
+nakama-server/*.log
+nakama-logs.txt
+
+# Docker Volumes
+postgres-data/
+docker volumes/
+*volumes/
+
+# IDE / Editor Folders
+.vscode/
+.idea/
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+
+# Temporary Files, Processes & Tests
+*.tmp
+*.pid
+coverage/
+# Tunnel tools
+ngrok.exe
+ngrok.zip
+cloudflared*
+test-client/out*.txt
+test-client/*.log
