@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+    <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0f172a" />
+            <stop offset="100%" stop-color="#1e293b" />
+        </linearGradient>
+        <linearGradient id="gradX" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#f43f5e" />
+            <stop offset="100%" stop-color="#fb923c" />
+        </linearGradient>
+        <linearGradient id="gradO" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#38bdf8" />
+            <stop offset="100%" stop-color="#818cf8" />
+        </linearGradient>
+        <filter id="glowX" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+        <filter id="glowO" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+        </filter>
+    </defs>
+    
+    <rect width="120" height="120" rx="24" fill="url(#bg)" />
+    
+    <g transform="translate(10, 10)">
+        <!-- Grid -->
+        <path d="M 33 15 L 33 85 M 66 15 L 66 85 M 15 33 L 85 33 M 15 66 L 85 66" 
+              stroke="#334155" stroke-width="6" stroke-linecap="round" />
+              
+        <!-- Top Left X -->
+        <g filter="url(#glowX)">
+            <path d="M 15 15 L 29 29 M 29 15 L 15 29" 
+                  stroke="url(#gradX)" stroke-width="5" stroke-linecap="round" />
+        </g>
+        
+        <!-- Center O -->
+        <g filter="url(#glowO)">
+            <circle cx="49.5" cy="49.5" r="9" stroke="url(#gradO)" stroke-width="5" fill="none" />
+        </g>
+
+        <!-- Bottom Right X -->
+        <g filter="url(#glowX)">
+            <path d="M 70 70 L 84 84 M 84 70 L 70 84" 
+                  stroke="url(#gradX)" stroke-width="5" stroke-linecap="round" />
+        </g>
+    </g>
+</svg>
