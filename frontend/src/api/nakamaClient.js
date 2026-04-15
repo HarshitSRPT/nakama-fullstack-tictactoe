@@ -1,6 +1,5 @@
-import { Client } from "@heroiclabs/nakama-js";
-import { getOrCreateDeviceId } from "../utils/deviceId.js";
-import { OP_MOVE, OP_STATE, OP_GAME_OVER, OP_ERROR, OP_SURRENDER, OP_TERMINATE } from "../constants/opcodes.js";
+import { Client, Session } from "@heroiclabs/nakama-js";
+import { OP_MOVE, OP_STATE, OP_GAME_OVER, OP_ERROR, OP_SURRENDER, OP_TERMINATE, OP_COMPARISON } from "../constants/opcodes.js";
 
 let client;
 let session;
@@ -9,10 +8,14 @@ let socket;
 let connectionPromise = null;
 
 /**
- * Initializes the Nakama client, authenticates the device, and connects the socket.
- * It also registers the socket listeners for match data and matchmaking.
+ * Initializes the Nakama client, restores the session from a server-generated token,
+ * connects the socket, and registers all socket listeners.
+ *
+ * SECURITY: The client NEVER calls authenticateCustom(). Sessions are only
+ * created by server RPCs (rpcRegisterUser / rpcLoginUser) after password
+ * validation. The token is restored here via Session.restore().
  */
-export async function initializeClient(callbacks = {}) {
+export async function initializeClient(callbacks = {}, authUsername = null) {
   if (!client) {
     const host = import.meta.env.VITE_NAKAMA_HOST || "127.0.0.1";
     const port = import.meta.env.VITE_NAKAMA_PORT || "7350";
@@ -21,13 +24,24 @@ export async function initializeClient(callbacks = {}) {
   }
 
   if (!session) {
-    const deviceId = getOrCreateDeviceId();
-    try {
-      session = await client.authenticateDevice(deviceId, false);
-    } catch {
-      session = await client.authenticateDevice(deviceId, true);
+    // Restore session from the server-generated token stored in localStorage.
+    // This token was created by nk.authenticateTokenGenerate() on the server
+    // AFTER password validation — no client-side authenticateCustom needed.
+    const savedToken = localStorage.getItem("auth_session_token");
+    if (savedToken) {
+      session = Session.restore(savedToken, "");
+
+      // Validate token hasn't expired
+      if (session.isexpired()) {
+        console.warn("Stored session token has expired. Please log in again.");
+        session = null;
+        throw new Error("Session expired. Please log in again.");
+      }
+
+      console.log("Nakama session restored from server token. User ID:", session.user_id);
+    } else {
+      throw new Error("No session token found. Please log in first.");
     }
-    console.log("Nakama session authenticated. User ID:", session.user_id);
   }
 
   if (!socket) {
@@ -42,13 +56,19 @@ export async function initializeClient(callbacks = {}) {
     await connectionPromise;
   }
 
-  // ALWAY attach handlers synchronously on every initializeClient call!
+  // ALWAYS attach handlers synchronously on every initializeClient call!
   // In React 18 StrictMode, the initial render gets unmounted, creating a stale closure.
   // We must update the global socket event listeners with the fresh scope every setup.
   socket.onmatchdata = (matchState) => {
-    const opcode = Number(matchState.op_code); console.log('RECEIVED MATCH DATA:', matchState);
+    const opcode = Number(matchState.op_code);
     const dataString = new TextDecoder().decode(matchState.data);
-    const data = JSON.parse(dataString);
+    let data;
+    try {
+      data = JSON.parse(dataString);
+    } catch (e) {
+      console.warn("Invalid match data received:", e.message);
+      return;
+    }
 
     switch (opcode) {
       case OP_STATE:
@@ -59,6 +79,9 @@ export async function initializeClient(callbacks = {}) {
         break;
       case OP_ERROR:
         if (callbacks.onError) callbacks.onError(data);
+        break;
+      case OP_COMPARISON:
+        if (callbacks.onComparison) callbacks.onComparison(data);
         break;
       case OP_TERMINATE:
         alert("Match ended by server");
@@ -96,18 +119,20 @@ export async function initializeClient(callbacks = {}) {
 let currentMatchmakerTicket = null;
 
 /**
- * Submits a matchmaking request to the server, ensuring exactly 2 players.
+ * Submits a matchmaking request with mode-aware string properties.
+ * @param {string} mode - "classic" or "timer"
  */
-export async function findMatch() {
+export async function findMatch(mode = "classic") {
   if (!socket) throw new Error("Socket is not initialized.");
 
-  const query = "*";
-  const minCount = 2; // Match pairs exactly 2 players
+  const query = "+properties.mode:" + mode;
+  const minCount = 2;
   const maxCount = 2;
+  const stringProperties = { mode: mode };
 
-  const matchmakerTicket = await socket.addMatchmaker(query, minCount, maxCount);
+  const matchmakerTicket = await socket.addMatchmaker(query, minCount, maxCount, stringProperties);
   currentMatchmakerTicket = matchmakerTicket;
-  console.log("Joined matchmaker with ticket:", matchmakerTicket.ticket);
+  console.log("Joined matchmaker with ticket:", matchmakerTicket.ticket, "mode:", mode);
   return matchmakerTicket;
 }
 
@@ -155,8 +180,39 @@ export async function surrenderMatch(matchId) {
   }
 }
 
-
+/**
+ * Call a server RPC.
+ * @param {string} rpcId - the RPC name
+ * @param {object|string} payload - JSON payload
+ */
+export async function rpc(rpcId, payload = {}) {
+  if (!client || !session) throw new Error("Client not initialized");
+  const result = await client.rpc(session, rpcId, payload);
+  return typeof result.payload === "string" ? JSON.parse(result.payload) : result.payload;
+}
 
 export function getSession() {
   return session;
+}
+
+export function getClient() {
+  return client;
+}
+
+/**
+ * Resets the client state (used on logout).
+ * Properly disconnects the socket before nulling references.
+ */
+export function resetClient() {
+  if (socket) {
+    try {
+      socket.disconnect(false);
+    } catch (e) {
+      console.warn("Socket disconnect error:", e);
+    }
+  }
+  socket = null;
+  session = null;
+  client = null;
+  connectionPromise = null;
 }

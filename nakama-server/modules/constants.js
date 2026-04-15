@@ -14,4 +14,6 @@ var OP_STATE = 2;
 var OP_GAME_OVER = 3;
 var OP_ERROR = 4;
 var OP_SURRENDER = 5;
+var OP_TIMER = 6;
+var OP_COMPARISON = 7;
 var OP_TERMINATE = 99;

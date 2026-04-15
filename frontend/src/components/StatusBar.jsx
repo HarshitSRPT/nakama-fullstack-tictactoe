@@ -12,7 +12,10 @@ const StatusBar = () => {
     drawStatus, 
     opponent,
     opponentLeft,
-    isRematchPending 
+    isRematchPending,
+    timeout,
+    gameMode,
+    me
   } = useMatch();
 
   let statusText = "";
@@ -20,17 +23,22 @@ const StatusBar = () => {
 
   if (connectionState === CONNECTION_STATE.IDLE) {
     statusText = "Ready to Play";
-    subText = "Find a match to start";
+    subText = "Select a mode and find a match";
   } else if (connectionState === CONNECTION_STATE.CONNECTING) {
     statusText = "Connecting to Server...";
   } else if (connectionState === CONNECTION_STATE.MATCHMAKING) {
     statusText = "Searching for opponent...";
+    subText = gameMode === 'timer' ? '⚡ Timed Mode' : '♟ Classic Mode';
   } else if (connectionState === CONNECTION_STATE.IN_MATCH) {
     if (opponentLeft) {
       statusText = "Opponent disconnected";
       subText = "You Win by default!";
     } else if (isRematchPending) {
-      statusText = winner === playerMark ? "You Won the Round! 🎉" : drawStatus ? "It's a Draw! 🤝" : "You Lost 😢";
+      if (timeout) {
+        statusText = winner === playerMark ? "Opponent lost on time" : "You lost on time";
+      } else {
+        statusText = winner === playerMark ? "You Won the Round! 🎉" : drawStatus ? "It's a Draw! 🤝" : "You Lost 😢";
+      }
       subText = "Next round starting...";
     } else {
       statusText = isMyTurn ? "Your Turn" : "Opponent's Turn";

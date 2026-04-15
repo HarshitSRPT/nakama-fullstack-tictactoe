@@ -1,4 +1,13 @@
 function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
+  // Timer mode: check turn deadline before processing messages
+  if (!state.gameOver && state.mode === MODE_TIMER) {
+    var timerResult = checkTurnTimer(ctx, logger, nk, dispatcher, tick, state);
+    if (timerResult) {
+      state = timerResult;
+      if (state.gameOver) return { state: state };
+    }
+  }
+
   if (state.gameOver) {
     if (Object.keys(state.presences).length === 0) {
       return null; // All players left, clean up automatically
@@ -16,6 +25,7 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
       state.draw = false;
       state.deadline = null;
       state.opponentLeft = false;
+      state.moveTimestamps = {};
       
       // Alternate starting marks
       var players = Object.keys(state.marks);
@@ -27,6 +37,7 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
          state.marks[p2] = m1;
       }
       state.turn = X; // X always starts
+      state.turnStartTick = tick;
 
       var resetMsg = JSON.stringify({
         type: "state",
@@ -36,13 +47,26 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
         gameOver: state.gameOver,
         winner: state.winner,
         draw: state.draw,
-        opponentLeft: state.opponentLeft
+        opponentLeft: state.opponentLeft,
+        mode: state.mode || MODE_CLASSIC
       });
       dispatcher.broadcastMessage(OP_STATE, resetMsg, null, null, true);
+
+      // Re-broadcast comparison stats so the pre-match UI updates with new records
+      try {
+        var mode = state.mode || MODE_CLASSIC;
+        var comparison = buildPlayerComparison(nk, logger, p1, p2, mode);
+        var compMsg = JSON.stringify({ type: "comparison", data: comparison });
+        dispatcher.broadcastMessage(OP_COMPARISON, compMsg, null, null, true);
+      } catch (e) {
+        logger.warn("Could not fetch player comparison for continuous round: " + e.message);
+      }
     }
     return { state: state };
   }
   for (var i = 0; i < messages.length; i++) {
+    if (state.gameOver) return { state: state };
+
     var message = messages[i];
     var senderId = message.sender.userId;
     var data;
@@ -72,6 +96,12 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
           if (winnerId) {
             nk.leaderboardRecordWrite("tictactoe_wins", winnerId, winnerId, 1, 0, {});
             logger.info("Leaderboard updated due to surrender win by " + winnerId);
+            // Update persistent stats
+            try {
+              updateStatsOnGameEnd(nk, logger, state, winnerId, "surrender");
+            } catch (se) {
+              logger.error("Stats update failed on surrender: " + se.message);
+            }
           }
         } catch (e) {
           logger.error("Leaderboard write failed on surrender: " + e.message);
@@ -85,7 +115,8 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
           gameOver: state.gameOver,
           winner: state.winner,
           draw: false,
-          opponentLeft: true
+          opponentLeft: true,
+          mode: state.mode || MODE_CLASSIC
         });
         dispatcher.broadcastMessage(OP_GAME_OVER, surrenderMsg, null, null, true);
       }
@@ -112,6 +143,12 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
       continue;
     }
     state.board[pos] = mark;
+
+    // Record move time for timer-mode stats
+    if (state.mode === MODE_TIMER) {
+      recordMoveTime(state, tick, senderId);
+    }
+
     var winner = checkWin(state.board);
     var draw = !winner && isDraw(state.board);
     if (winner) {
@@ -128,6 +165,12 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
         }
         if (winnerId) {
           nk.leaderboardRecordWrite("tictactoe_wins", winnerId, winnerId, 1, 0, {});
+          // Update persistent stats
+          try {
+            updateStatsOnGameEnd(nk, logger, state, winnerId, "win");
+          } catch (se) {
+            logger.error("Stats update failed on win: " + se.message);
+          }
         }
       } catch (e) {
         logger.error("Leaderboard write failed: " + e.message);
@@ -135,8 +178,15 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
     } else if (draw) {
       state.gameOver = true;
       state.draw = true;
+      // Update persistent stats for draw
+      try {
+        updateStatsOnDraw(nk, logger, state);
+      } catch (se) {
+        logger.error("Stats update failed on draw: " + se.message);
+      }
     } else {
       state.turn = (state.turn === X) ? O : X;
+      state.turnStartTick = tick;
     }
     var stateMsg = JSON.stringify({
       type: "state",
@@ -146,7 +196,8 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
       gameOver: state.gameOver,
       winner: state.winner,
       draw: state.draw,
-      opponentLeft: state.opponentLeft || false
+      opponentLeft: state.opponentLeft || false,
+      mode: state.mode || MODE_CLASSIC
     });
     dispatcher.broadcastMessage(state.gameOver ? OP_GAME_OVER : OP_STATE, stateMsg, null, null, true);
   }

@@ -3,7 +3,7 @@ import { MatchContext } from '../context/MatchContext.jsx';
 
 export function useMatch() {
   const context = useContext(MatchContext);
-  if (context === undefined) {
+  if (context === undefined || context === null) {
     throw new Error('useMatch must be used within a MatchProvider');
   }
   
@@ -20,7 +20,11 @@ export function useMatch() {
     opponentLeft,
     roundWinner,
     isRematchPending,
-    leaveMatch
+    leaveMatch,
+    gameMode,
+    turnKey,
+    comparisonData,
+    timeout
   } = context;
   
   const isMyTurn = playerMark && currentTurn === playerMark;

@@ -16,3 +16,8 @@ function isDraw(board) {
   }
   return true;
 }
+
+function calculateWinRate(wins, losses, draws) {
+  var totalGames = wins + losses + draws;
+  return totalGames > 0 ? Math.round((wins / totalGames) * 10000) / 100 : 0;
+}

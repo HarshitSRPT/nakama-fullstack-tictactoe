@@ -1,0 +1,176 @@
+/* ──────────────────────────────────────────────────────────── */
+/* Player Comparison Panel                                     */
+/* Side-by-side stat comparison before match start              */
+/* ──────────────────────────────────────────────────────────── */
+
+.comparison-panel {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 20px;
+  padding: 1.25rem 1.5rem;
+  width: 100%;
+  max-width: 500px;
+  animation: compSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes compSlideIn {
+  from { opacity: 0; transform: translateY(-20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.comp-mode-badge {
+  display: inline-block;
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.25rem 0.75rem;
+  border-radius: 100px;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.comp-no-history {
+  background: rgba(148, 163, 184, 0.1);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  padding: 0.4rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-style: italic;
+}
+
+.comparison-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+}
+
+.comp-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+.comparison-winner {
+  background: rgba(74, 222, 128, 0.05);
+  border-color: rgba(74, 222, 128, 0.2);
+  box-shadow: 0 0 15px rgba(74, 222, 128, 0.05);
+}
+
+.comp-winner-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #4ade80;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 0.2rem;
+}
+
+.comp-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.comp-player-a .comp-avatar { background: linear-gradient(135deg, #3b82f6, #6366f1); }
+.comp-player-b .comp-avatar { background: linear-gradient(135deg, #ef4444, #f97316); }
+
+.comparison-winner.comp-player-a .comp-avatar { box-shadow: 0 0 12px rgba(59, 130, 246, 0.4); }
+.comparison-winner.comp-player-b .comp-avatar { box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
+
+.comp-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-main);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comp-vs {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--text-muted);
+  opacity: 0.4;
+  font-style: italic;
+}
+
+.comparison-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.comp-stat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.comp-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex: 1;
+  text-align: center;
+}
+
+.comp-val {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-main);
+  width: 60px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.comp-player-a .comp-val { text-align: left; }
+.comp-player-b .comp-val { text-align: right; }
+
+.comp-val-better {
+  color: #4ade80;
+  text-shadow: 0 0 8px rgba(74, 222, 128, 0.3);
+}
+
+.comp-tiebreaker-note {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: #fbbf24;
+  opacity: 0.9;
+  padding: 0.5rem;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 8px;
+}
+

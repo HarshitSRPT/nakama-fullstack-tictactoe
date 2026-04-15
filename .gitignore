@@ -46,3 +46,8 @@ ngrok.zip
 cloudflared*
 test-client/out*.txt
 test-client/*.log
+test-client/test_out.txt
+
+# Nakama runtime bundle (generated at container start)
+nakama-server/modules/build.js
+nakama-server/modules/matchSignal.js
