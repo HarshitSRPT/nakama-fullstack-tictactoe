@@ -16,4 +16,5 @@ var OP_ERROR = 4;
 var OP_SURRENDER = 5;
 var OP_TIMER = 6;
 var OP_COMPARISON = 7;
+var OP_WILL_LEAVE = 8;
 var OP_TERMINATE = 99;

@@ -15,9 +15,24 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
 
     // Reset board after a short delay (approx 3 seconds with TICK_RATE = 5)
     state.deadline = state.deadline || (tick + 15);
-    
+
     // Only restart if exactly 2 players are present
     if (tick >= state.deadline && Object.keys(state.presences).length === 2) {
+      if (state.leavingPlayers && Object.keys(state.leavingPlayers).length > 0) {
+        logger.info("A player specified intent to leave gracefully. Ending match loop.");
+        var players = Object.keys(state.presences);
+        for (var pIdx = 0; pIdx < players.length; pIdx++) {
+          var pid = players[pIdx];
+          var pDetails = state.presences[pid];
+          if (state.leavingPlayers[pid]) {
+            dispatcher.broadcastMessage(OP_TERMINATE, JSON.stringify({ silent: true }), [pDetails], null, true);
+          } else {
+            dispatcher.broadcastMessage(OP_TERMINATE, JSON.stringify({ msg: "This was the last round as your opponent did not want to play further!" }), [pDetails], null, true);
+          }
+        }
+        return null;
+      }
+
       logger.info("Resetting board for next round");
       state.board = new Array(BOARD_SIZE).fill(EMPTY);
       state.gameOver = false;
@@ -26,15 +41,15 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
       state.deadline = null;
       state.opponentLeft = false;
       state.moveTimestamps = {};
-      
+
       // Alternate starting marks
       var players = Object.keys(state.marks);
       if (players.length === 2) {
-         var p1 = players[0];
-         var p2 = players[1];
-         var m1 = state.marks[p1];
-         state.marks[p1] = state.marks[p2];
-         state.marks[p2] = m1;
+        var p1 = players[0];
+        var p2 = players[1];
+        var m1 = state.marks[p1];
+        state.marks[p1] = state.marks[p2];
+        state.marks[p2] = m1;
       }
       state.turn = X; // X always starts
       state.turnStartTick = tick;
@@ -76,6 +91,13 @@ function matchLoop(ctx, logger, nk, dispatcher, tick, state, messages) {
       logger.warn("Invalid message from " + senderId + ": " + e.message);
       continue;
     }
+    if (message.opCode === OP_WILL_LEAVE) {
+      if (!state.leavingPlayers) state.leavingPlayers = {};
+      state.leavingPlayers[senderId] = true;
+      logger.info("Player " + senderId + " marked to leave after round.");
+      continue;
+    }
+
     if (message.opCode === OP_SURRENDER) {
       var surrenderMark = state.marks[senderId];
       if (surrenderMark && !state.gameOver) {

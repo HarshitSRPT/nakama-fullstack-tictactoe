@@ -40,9 +40,13 @@ function rpcRegisterUser(ctx, logger, nk, payload) {
   var passwordHash = nk.sha256Hash(salt + password);
 
   // Create a Nakama account via custom auth (create = true)
+  // We use a generated UUID instead of 'username' directly because Nakama 
+  // mandates custom IDs must be strictly between 6-128 bytes, 
+  // which would block valid usernames like "admin" or "harsh" (5 chars).
+  var customId = nk.uuidv4();
   var result;
   try {
-    result = nk.authenticateCustom(username, username, true);
+    result = nk.authenticateCustom(customId, username, true);
   } catch (e) {
     logger.error("authenticateCustom failed during registration: " + e.message);
     return JSON.stringify({ success: false, error: "Account creation failed" });
