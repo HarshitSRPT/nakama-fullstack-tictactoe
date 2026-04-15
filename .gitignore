@@ -12,6 +12,8 @@ frontend/dist/
 .env.production
 .env.development
 .env.example
+nakama-server/.env
+frontend/.env.local
 
 # Logs & Debug Data
 *.log

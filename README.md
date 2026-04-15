@@ -210,3 +210,20 @@ The configuration specifically omits pushing sensitive structural paths to globa
 - `[ ]` Debug logs / `nakama_logs.txt`.
 - `[ ]` Temporary tunnel endpoints (e.g., Ngrok or Cloudflare `cloudflared` configs).
 - `[ ]` `node_modules/` or `dist/` build artifacts.
+
+
+## Security Notes
+
+This project intentionally avoids committing runtime credentials.
+
+Environment variables required:
+
+Backend:
+- NAKAMA_DATABASE_ADDRESS
+- NAKAMA_SESSION_ENCRYPTION_KEY
+
+Frontend:
+- VITE_NAKAMA_HOST
+- VITE_NAKAMA_PORT
+- VITE_NAKAMA_SSL
+- VITE_NAKAMA_SERVER_KEY

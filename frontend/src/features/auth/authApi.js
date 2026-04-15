@@ -19,10 +19,11 @@ const BOOTSTRAP_DEVICE_ID = "tictactoe_auth_bootstrap";
 
 function getClient() {
   if (!_client) {
-    const host = import.meta.env.VITE_NAKAMA_HOST || "127.0.0.1";
-    const port = import.meta.env.VITE_NAKAMA_PORT || "7350";
+    const host = import.meta.env.VITE_NAKAMA_HOST;
+    const port = import.meta.env.VITE_NAKAMA_PORT;
     const ssl = import.meta.env.VITE_NAKAMA_SSL === "true";
-    _client = new Client("defaultkey", host, port, ssl);
+    const serverKey = import.meta.env.VITE_NAKAMA_SERVER_KEY;
+    _client = new Client(serverKey, host, port, ssl);
   }
   return _client;
 }
@@ -36,7 +37,7 @@ async function getBootstrapSession() {
     return _bootstrapSession;
   }
   const client = getClient();
-  _bootstrapSession = await client.authenticateDevice(BOOTSTRAP_DEVICE_ID, true);
+  _bootstrapSession = await client.authenticateDevice(crypto.randomUUID(), true);
   return _bootstrapSession;
 }
 
