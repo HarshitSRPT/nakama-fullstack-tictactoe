@@ -15,4 +15,4 @@ exec /nakama/nakama --name nakama1 \
     --logger.level INFO \
     --session.token_expiry_sec 7200 \
     --session.encryption_key "${NAKAMA_SESSION_ENCRYPTION_KEY}" \
-    --runtime.js_entrypoint "data/modules/build.js"
+    --runtime.js_entrypoint "build.js"
