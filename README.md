@@ -188,8 +188,6 @@ npm run dev
 
 ---
 
-## 📝 Evaluator Quick Test Checklist
-
 To validate functionality quickly:
 
 1. Open the deployed frontend:
@@ -203,7 +201,7 @@ To validate functionality quickly:
    - matchmaking pairs correctly
    - moves sync in realtime
    - invalid moves rejected
-   - timer mode enforces 15-second timeout
+   - timer mode enforces 15-second timeout(Except for first move of the first match)
    - leaderboard updates after win
 
 **If signup initially fails:**
