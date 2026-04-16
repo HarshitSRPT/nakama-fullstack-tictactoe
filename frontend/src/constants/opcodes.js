@@ -5,6 +5,7 @@ export const OP_ERROR = 4;
 export const OP_SURRENDER = 5;
 export const OP_TIMER = 6;
 export const OP_COMPARISON = 7;
+export const OP_WILL_LEAVE = 8;
 export const OP_TERMINATE = 99;
 
 export const CONNECTION_STATE = {

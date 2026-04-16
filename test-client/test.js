@@ -251,7 +251,51 @@ async function runTest() {
      console.log("✅ Match gracefully shut down empty presences.");
      console.log("RECONNECT FLOW PASS\n");
 
-     finish();
+     runLeaveAfterMatchTest();
+  }
+
+  // ---------- PHASE H: LEAVE AFTER MATCH TEST ----------
+  async function runLeaveAfterMatchTest() {
+     console.log("\n[PHASE H] Running LEAVE AFTER MATCH TEST...");
+     
+     socket1 = client1.createSocket(false, false);
+     socket2 = client2.createSocket(false, false);
+
+     await socket1.connect(session1, true);
+     await socket2.connect(session2, true);
+
+     socket1.onmatchdata = async (result) => {
+        let opcode = Number(result.op_code);
+        if (opcode === 99) { // OP_TERMINATE
+           console.log("✅ Match gracefully terminated via OP_TERMINATE.");
+           console.log("LEAVE AFTER MATCH FLOW PASS\n");
+           finish();
+        }
+     };
+
+     socket1.onmatchmakermatched = async (matched) => {
+        const match = await socket1.joinMatch(matched.match_id, matched.token);
+        // Signal intent to leave after match
+        await socket1.sendMatchState(match.match_id, 8, JSON.stringify({ intent: "leave_after_game" }));
+        await wait(500);
+        await socket1.sendMatchState(match.match_id, 1, JSON.stringify({ type: "move", position: "0" }));
+     };
+
+     socket2.onmatchmakermatched = async (matched) => {
+        await socket2.joinMatch(matched.match_id, matched.token);
+        setTimeout(async () => {
+           await socket2.sendMatchState(matched.match_id, 1, JSON.stringify({ type: "move", position: "3" }));
+           await wait(200);
+           await socket1.sendMatchState(matched.match_id, 1, JSON.stringify({ type: "move", position: "1" }));
+           await wait(200);
+           await socket2.sendMatchState(matched.match_id, 1, JSON.stringify({ type: "move", position: "4" }));
+           await wait(200);
+           await socket1.sendMatchState(matched.match_id, 1, JSON.stringify({ type: "move", position: "2" }));
+        }, 1000);
+     };
+
+     await socket1.addMatchmaker("+properties.mode:classic", 2, 2, {mode:"classic"});
+     await socket2.addMatchmaker("+properties.mode:classic", 2, 2, {mode:"classic"});
   }
 
   async function move(socket, pos) {

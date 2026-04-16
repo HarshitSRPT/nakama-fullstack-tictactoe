@@ -16,6 +16,9 @@ const GameScreen = () => {
     turnKey,
     winner,
     drawStatus,
+    willLeaveNextRound,
+    toggleLeaveNextRound,
+    terminateMessage
   } = useMatch();
 
   const gameOver = !!(winner || drawStatus);
@@ -47,13 +50,28 @@ const GameScreen = () => {
               <Board />
             </div>
 
-            <button
-              className="find-match-btn"
-              onClick={leaveMatch}
-              style={{ backgroundColor: "var(--secondary-color)" }}
-            >
-              Leave Game
-            </button>
+            <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+              <button
+                className="find-match-btn"
+                onClick={leaveMatch}
+                style={{ backgroundColor: "var(--secondary-color)", padding: "10px 20px" }}
+              >
+                Quit Game
+              </button>
+              <button
+                className="find-match-btn"
+                onClick={toggleLeaveNextRound}
+                disabled={willLeaveNextRound || gameOver}
+                title="Finish this round, then leave automatically"
+                style={{
+                  backgroundColor: willLeaveNextRound ? "#555" : "inherit",
+                  opacity: willLeaveNextRound ? 0.7 : 1,
+                  padding: "10px 20px"
+                }}
+              >
+                {willLeaveNextRound ? "Leaving afterwards..." : "Leave After Match"}
+              </button>
+            </div>
           </div>
         ) : (
           <div
@@ -77,6 +95,12 @@ const GameScreen = () => {
           <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
             {gameMode === "timer" ? "15 seconds per move" : "No time limit"}
           </p>
+
+          {terminateMessage && (
+            <div style={{ marginTop: "1.5rem", padding: "1rem", backgroundColor: "rgba(220, 53, 69, 0.2)", borderRadius: "8px", border: "1px solid #dc3545" }}>
+              <p style={{ color: "#ff6b6b", margin: 0, fontWeight: "bold" }}>{terminateMessage}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>

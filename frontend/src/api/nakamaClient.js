@@ -1,5 +1,5 @@
 import { Client, Session } from "@heroiclabs/nakama-js";
-import { OP_MOVE, OP_STATE, OP_GAME_OVER, OP_ERROR, OP_SURRENDER, OP_TERMINATE, OP_COMPARISON } from "../constants/opcodes.js";
+import { OP_MOVE, OP_STATE, OP_GAME_OVER, OP_ERROR, OP_SURRENDER, OP_WILL_LEAVE, OP_TERMINATE, OP_COMPARISON } from "../constants/opcodes.js";
 
 let client;
 let session;
@@ -85,8 +85,7 @@ export async function initializeClient(callbacks = {}, authUsername = null) {
         if (callbacks.onComparison) callbacks.onComparison(data);
         break;
       case OP_TERMINATE:
-        alert("Match ended by server");
-        if (callbacks.onDisconnect) callbacks.onDisconnect();
+        if (callbacks.onTerminate) callbacks.onTerminate(data);
         break;
     }
   };
@@ -178,6 +177,16 @@ export async function surrenderMatch(matchId) {
     await socket.sendMatchState(matchId, OP_SURRENDER, data);
   } catch (err) {
     console.error("Failed to cleanly surrender:", err);
+  }
+}
+
+export async function signalLeaveNextRound(matchId) {
+  if (!socket || !matchId) return;
+  try {
+    const data = JSON.stringify({ intent: "leave_after_game" });
+    await socket.sendMatchState(matchId, OP_WILL_LEAVE, data);
+  } catch (err) {
+    console.error("Failed to signal leave next round:", err);
   }
 }
 

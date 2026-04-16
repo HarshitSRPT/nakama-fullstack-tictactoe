@@ -8,6 +8,7 @@ import {
   cancelMatchmaking,
   surrenderMatch,
   resetClient,
+  signalLeaveNextRound,
 } from "../api/nakamaClient.js";
 import { CONNECTION_STATE } from "../constants/opcodes.js";
 
@@ -43,6 +44,8 @@ export const MatchProvider = ({ children, username }) => {
   const [roundWinner, setRoundWinner] = useState(null);
   const [isRematchPending, setIsRematchPending] = useState(false);
   const [timeout, setTimeout_] = useState(false);
+  const [willLeaveNextRound, setWillLeaveNextRound] = useState(false);
+  const [terminateMessage, setTerminateMessage] = useState(null);
 
   useEffect(() => {
     if (!username) return;
@@ -94,6 +97,12 @@ export const MatchProvider = ({ children, username }) => {
               if (!unmounted) {
                 setConnectionState(CONNECTION_STATE.DISCONNECTED);
                 setComparisonData(null);
+                setTerminateMessage(null);
+              }
+            },
+            onTerminate: (data) => {
+              if (!unmounted && data && data.msg && !data.silent) {
+                setTerminateMessage(data.msg);
               }
             },
           },
@@ -169,6 +178,7 @@ export const MatchProvider = ({ children, username }) => {
       setRoundWinner(null);
       setIsRematchPending(false);
       setTimeout_(false);
+      setTerminateMessage(null);
       setTurnKey((k) => k + 1);
     }
   };
@@ -236,6 +246,13 @@ export const MatchProvider = ({ children, username }) => {
     await sendMove(matchId, index);
   };
 
+  const toggleLeaveNextRound = async () => {
+    if (matchId) {
+      setWillLeaveNextRound(true);
+      await signalLeaveNextRound(matchId);
+    }
+  };
+
   const exitMatch = async () => {
     if (matchId) {
       await surrenderMatch(matchId);
@@ -252,6 +269,8 @@ export const MatchProvider = ({ children, username }) => {
     setRoundWinner(null);
     setIsRematchPending(false);
     setComparisonData(null);
+    setWillLeaveNextRound(false);
+    setTerminateMessage(null);
     setConnectionState(CONNECTION_STATE.IDLE);
   };
 
@@ -274,11 +293,14 @@ export const MatchProvider = ({ children, username }) => {
         comparisonData,
         timeout,
         me,
+        willLeaveNextRound,
+        terminateMessage,
         joinMatch: startMatchmaking,
         sendMove: executeMove,
         findMatch: startMatchmaking,
         cancelMatchmaking: cancelMatchQueue,
         leaveMatch: exitMatch,
+        toggleLeaveNextRound,
       }}
     >
       {children}
