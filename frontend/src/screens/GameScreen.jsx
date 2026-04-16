@@ -69,7 +69,9 @@ const GameScreen = () => {
                   padding: "10px 20px"
                 }}
               >
-                {willLeaveNextRound ? "Leaving afterwards..." : "Leave After Match"}
+                {willLeaveNextRound
+                  ? (gameOver ? "You can quit now" : "Leaving afterwards...")
+                  : "Leave After Match"}
               </button>
             </div>
           </div>
