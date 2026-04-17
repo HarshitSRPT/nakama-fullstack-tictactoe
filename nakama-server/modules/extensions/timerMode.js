@@ -20,7 +20,7 @@ function checkTurnTimer(ctx, logger, nk, dispatcher, tick, state) {
   if (Object.keys(state.presences).length < 2) return null;
 
   // Guard: turnStartTick must be set
-  if (!state.turnStartTick || state.turnStartTick <= 0) return null;
+  if (state.turnStartTick === -1) return null;
 
   var elapsedTicks = tick - state.turnStartTick;
   var elapsedSeconds = elapsedTicks / TICK_RATE;
@@ -92,7 +92,7 @@ function recordMoveTime(state, tick, senderId) {
   if (!state.moveTimestamps) state.moveTimestamps = {};
 
   var moveTimeSec = 0;
-  if (state.turnStartTick > 0) {
+  if (state.turnStartTick >= 0) {
     moveTimeSec = (tick - state.turnStartTick) / TICK_RATE;
   }
 

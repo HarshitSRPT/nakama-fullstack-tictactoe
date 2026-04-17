@@ -9,6 +9,7 @@ import { useMatch } from './hooks/useMatch.js';
 import { CONNECTION_STATE } from './constants/opcodes.js';
 import { resetClient } from './api/nakamaClient.js';
 import './styles/board.css';
+import './styles/auth.css';
 
 function AppContent() {
   const { isLoggedIn, username, login, logout, loading } = useAuth();
@@ -66,6 +67,15 @@ function AppGameFlow({ username, onLogout }) {
 
   if (connectionState === CONNECTION_STATE.IN_MATCH) {
     return <GameScreen layoutType="modern" />;
+  }
+
+  if (connectionState === CONNECTION_STATE.CONNECTING) {
+    return (
+      <div className="app-loading">
+        <div className="app-loading-spinner"></div>
+        <p>Connecting to Server...</p>
+      </div>
+    );
   }
 
   return <LobbyScreen username={username} onLogout={onLogout} />;

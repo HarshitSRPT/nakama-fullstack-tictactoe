@@ -11,7 +11,7 @@ function matchInit(ctx, logger, nk, params) {
     draw: false,
     gameOver: false,
     mode: mode,
-    turnStartTick: 0,
+    turnStartTick: -1,
     moveTimestamps: {}
   };
   state.mode = params.mode || MODE_CLASSIC;
